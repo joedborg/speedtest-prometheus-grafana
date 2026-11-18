@@ -50,12 +50,6 @@ follow-up test instead of interrupting it or starting an overlapping test.
 Multiple requests received before the queued test starts are combined into one.
 Manual tests bypass the usual 5-minute minimum interval.
 
-After updating an existing installation, rebuild the runner first:
-
-```sh
-docker compose up -d --build speedtest
-```
-
 ## Alerting
 
 A provisioned Grafana alert, **Speedtest latest test is not OK**, checks the
