@@ -69,7 +69,7 @@
     },
     {
       "id": 8, "title": "Next test in", "type": "stat",
-      "description": "Negative vlaue means test is overdue",
+      "description": "Negative vlaue means test is overdue.",
       "gridPos": {"x": 4, "y": 4, "w": 4, "h": 4},
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "targets": [{"refId": "A", "expr": "speedtest_next_run_timestamp_seconds - time()", "instant": true}],
