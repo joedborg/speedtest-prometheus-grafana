@@ -122,7 +122,12 @@
       "id": 14, "title": "Idle latency and jitter", "type": "timeseries",
       "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
       "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "targets": [{"refId": "A", "expr": "{__name__=~\"speedtest_ping_(latency|jitter|low|high)_seconds\"}", "legendFormat": "{{__name__}}"}],
+      "targets": [
+        {"refId": "A", "expr": "speedtest_ping_latency_seconds", "legendFormat": "Idle latency"},
+        {"refId": "B", "expr": "speedtest_ping_jitter_seconds", "legendFormat": "Idle jitter"},
+        {"refId": "C", "expr": "speedtest_ping_low_seconds", "legendFormat": "Minimum idle latency"},
+        {"refId": "D", "expr": "speedtest_ping_high_seconds", "legendFormat": "Maximum idle latency"}
+      ],
       "fieldConfig": {"defaults": {"unit": "s", "min": 0, "custom": {"lineInterpolation": "stepAfter"}}, "overrides": []},
       "options": {"tooltip": {"mode": "multi"}, "legend": {"displayMode": "list", "placement": "bottom"}}
     },
@@ -131,7 +136,14 @@
       "description": "IQM is Ookla's interquartile mean. These optional values describe latency during saturated transfers.",
       "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8},
       "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "targets": [{"refId": "A", "expr": "{__name__=~\"speedtest_(download|upload)_latency_(iqm|low|high)_seconds\"}", "legendFormat": "{{__name__}}"}],
+      "targets": [
+        {"refId": "A", "expr": "speedtest_download_latency_iqm_seconds", "legendFormat": "Download latency (IQM)"},
+        {"refId": "B", "expr": "speedtest_download_latency_low_seconds", "legendFormat": "Minimum download latency"},
+        {"refId": "C", "expr": "speedtest_download_latency_high_seconds", "legendFormat": "Maximum download latency"},
+        {"refId": "D", "expr": "speedtest_upload_latency_iqm_seconds", "legendFormat": "Upload latency (IQM)"},
+        {"refId": "E", "expr": "speedtest_upload_latency_low_seconds", "legendFormat": "Minimum upload latency"},
+        {"refId": "F", "expr": "speedtest_upload_latency_high_seconds", "legendFormat": "Maximum upload latency"}
+      ],
       "fieldConfig": {"defaults": {"unit": "s", "min": 0, "custom": {"lineInterpolation": "stepAfter"}}, "overrides": []},
       "options": {"tooltip": {"mode": "multi"}, "legend": {"displayMode": "list", "placement": "bottom"}}
     },
