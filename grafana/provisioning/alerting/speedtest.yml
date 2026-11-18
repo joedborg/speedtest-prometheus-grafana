@@ -1,0 +1,43 @@
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: Speedtest
+    folder: Network
+    interval: 30s
+    rules:
+      - uid: speedtest-latest-test-status
+        title: Speedtest latest test is not OK
+        condition: B
+        for: 0s
+        noDataState: Alerting
+        execErrState: Alerting
+        isPaused: false
+        annotations:
+          __dashboardUid__: speedtest
+          __panelId__: "6"
+          summary: Latest speedtest status is not OK
+          description: The latest speedtest did not succeed, its status is missing, or the status query failed. Check the speedtest runner logs and Prometheus connectivity.
+        labels:
+          severity: warning
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 600
+              to: 0
+            model:
+              refId: A
+              expr: speedtest_success
+              instant: true
+              range: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            relativeTimeRange:
+              from: 0
+              to: 0
+            model:
+              refId: B
+              type: math
+              expression: $A != 1

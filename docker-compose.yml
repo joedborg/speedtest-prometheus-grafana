@@ -1,0 +1,62 @@
+services:
+  speedtest:
+    build: ./speedtest
+    restart: unless-stopped
+    environment:
+      SPEEDTEST_ACCEPT_LICENSE: ${SPEEDTEST_ACCEPT_LICENSE:-false}
+      PUSHGATEWAY_URL: http://pushgateway:9091
+      HOME: /tmp
+    depends_on:
+      - pushgateway
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  pushgateway:
+    image: prom/pushgateway:v1.11.4
+    restart: unless-stopped
+    command:
+      - --persistence.file=/data/metrics
+      - --persistence.interval=30s
+    volumes:
+      - pushgateway-data:/data
+
+  prometheus:
+    image: prom/prometheus:v3.16.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=90d
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      - pushgateway
+
+  grafana:
+    image: grafana/grafana:13.3.1
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+
+volumes:
+  pushgateway-data:
+  prometheus-data:
+  grafana-data:
