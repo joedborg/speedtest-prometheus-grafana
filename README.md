@@ -44,12 +44,6 @@ The rule appears under **Alerting > Alert rules**. To receive notifications,
 configure a contact point and notification policy in Grafana; no external
 notification destination is configured by this stack.
 
-For an already-running stack, load the provisioned rule with:
-
-```sh
-docker compose restart grafana
-```
-
 The status metric retains the last result if the runner stops; this rule does
 not detect a stopped runner whose last result was successful. The dashboard's
 data-age and next-test panels still indicate stale results.
