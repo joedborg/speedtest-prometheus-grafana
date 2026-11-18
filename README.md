@@ -31,6 +31,31 @@ password. The **Network / Internet Speedtest** dashboard and Prometheus data
 source are provisioned automatically. Only Grafana publishes a host port, bound
 to localhost. Prometheus and Pushgateway are internal to the Compose network.
 
+## Run a test manually
+
+```sh
+docker compose exec speedtest python runner.py --trigger
+docker compose logs -f speedtest
+```
+
+This requests a test from the existing scheduler without stopping or restarting
+the container. The command confirms the request, not test completion; follow the
+logs for the result. The existing runner starts a test within about a second
+and pushes its results normally, preserving counters and the last successful
+measurements on failure. Prometheus picks up results on its next 15s scrape.
+The next random interval starts from the manual test's start time.
+
+If a test or its result push is in progress, the manual request queues one
+follow-up test instead of interrupting it or starting an overlapping test.
+Multiple requests received before the queued test starts are combined into one.
+Manual tests bypass the usual 5-minute minimum interval.
+
+After updating an existing installation, rebuild the runner first:
+
+```sh
+docker compose up -d --build speedtest
+```
+
 ## Alerting
 
 A provisioned Grafana alert, **Speedtest latest test is not OK**, checks the

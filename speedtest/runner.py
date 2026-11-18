@@ -1,8 +1,11 @@
+import argparse
 import json
 import logging
 import math
 import os
+from pathlib import Path
 import random
+import signal
 import subprocess
 import time
 import urllib.error
@@ -154,7 +157,44 @@ class Runner:
         self.values["speedtest_run_duration_seconds"] = time.monotonic() - started
 
 
-def main():
+class RunTrigger:
+    def __init__(self):
+        self.requested = False
+
+    def request(self, signum, frame):
+        self.requested = True
+
+    def wait(self, seconds):
+        deadline = time.monotonic() + seconds
+        while not self.requested:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return
+            time.sleep(min(1, remaining))
+        self.requested = False
+        LOG.info("Manual speedtest requested")
+
+
+def request_run():
+    try:
+        command = Path("/proc/1/cmdline").read_bytes().split(b"\0")
+        status = Path("/proc/1/status").read_text().splitlines()
+        caught = next(line.split()[1] for line in status if line.startswith("SigCgt:"))
+        if b"runner.py" not in command or not int(caught, 16) & (1 << (signal.SIGUSR1 - 1)):
+            raise SystemExit("The speedtest scheduler is not ready; check its logs and retry.")
+        os.kill(1, signal.SIGUSR1)
+    except (OSError, StopIteration, ValueError) as error:
+        raise SystemExit(f"Cannot trigger the speedtest scheduler: {error}") from error
+    print("Speedtest requested. Follow progress with: docker compose logs -f speedtest")
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="Run the speedtest scheduler or request a manual test.")
+    parser.add_argument("--trigger", action="store_true", help="Request a test from the running container scheduler.")
+    args = parser.parse_args(argv)
+    if args.trigger:
+        request_run()
+        return
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     if os.environ.get("SPEEDTEST_ACCEPT_LICENSE", "").lower() != "true":
         raise SystemExit(
@@ -162,6 +202,8 @@ def main():
             "(https://www.speedtest.net/about/eula) and privacy policy "
             "(https://www.speedtest.net/about/privacy)."
         )
+    trigger = RunTrigger()
+    signal.signal(signal.SIGUSR1, trigger.request)
     runner = Runner()
     url = os.environ.get("PUSHGATEWAY_URL", "http://pushgateway:9091")
     while True:
@@ -174,7 +216,7 @@ def main():
         push(url, exposition(runner.values, runner.info))
         LOG.info("Next test scheduled in %.0f seconds",
                  max(0, interval - (time.monotonic() - started)))
-        time.sleep(max(0, interval - (time.monotonic() - started)))
+        trigger.wait(max(0, interval - (time.monotonic() - started)))
 
 
 if __name__ == "__main__":
